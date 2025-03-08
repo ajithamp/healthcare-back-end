@@ -1,7 +1,8 @@
+require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
-const protect = (req, res, next) => {
-  const token = req.header('Authorization');
+const authUser = (req, res, next) => {
+  const token = req.header('token');
   
   if (!token) return res.status(401).json({ message: 'No token, authorization denied' });
 
@@ -14,4 +15,4 @@ const protect = (req, res, next) => {
   }
 };
 
-module.exports = protect;
+module.exports = authUser;

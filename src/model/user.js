@@ -1,21 +1,58 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+// Define the schema for the user
 const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  mobileNumber: { type: String, required: true },
-  role: { type: String, required: true },
-  dob: { type: String, required: true },
-});
-// Password hashing
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  name: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  email: {
+    type: String,
+    required: true, 
+    unique: true, 
+    lowercase: true, 
+    trim: true,
+  },
+  password: {
+    type: String,
+    required: true, 
+  },
+  mobileNumber: {
+    type: Number,
+    required:true
+  },
+  role: {
+    type: String,
+    enum: ['patient', 'provider'], 
+    required: true,
+  },
+  dob: {
+    type: String,
+  }
+}, {
+  timestamps: true, 
 });
 
-const User = mongoose.model('UserDetails', userSchema);
+userSchema.methods.isPasswordValid = async function (enteredPassword) {
+  try {
+    // Compare the entered password with the hashed password in the database
+    return await bcrypt.compare(enteredPassword, this.password);
+  } catch (err) {
+    throw new Error('Error validating password');
+  }
+};
+
+userSchema.pre('save', async function(next) {
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+  next();
+});
+
+
+// Create the User model using the schema
+const User = mongoose.model('User', userSchema);
 
 module.exports = User;
